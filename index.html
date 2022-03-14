@@ -14,13 +14,15 @@
     </header>
     <main>
         <div class="warp">
-            <input type="text" placeholder="接下来做什么">
+            <input class="input" type="text" placeholder="接下来做什么">
+            <!-- 插入值还是？ 整个渲染？ -->
+            <li></li>
             <div class="footer">
                 <div class="count">0 items left</div>
                 <div class="btns">
-                    <div class="active btn btn1" onclick="selectBtn()">all</div>
-                    <div class="btn btn2" onclick="selectBtn()">active</div>
-                    <div class="btn btn3" onclick="selectBtn()">completed</div>
+                    <div class="active btn btn1" onclick="selectBtn(1)">all</div>
+                    <div class="btn btn2" onclick="selectBtn(2)">active</div>
+                    <div class="btn btn3" onclick="selectBtn(3)">completed</div>
                 </div>
                 <div class="btn4">Clear Completed</div>
             </div>
@@ -33,13 +35,44 @@
 
 </html>
 <script>
-    function selectBtn() {
+    // 点击按钮事件
+    function selectBtn(type) {
         let target = event.target
         let btns = document.querySelectorAll('.btn')
+        changeBtn(target, btns)
+        switch (type) {
+            case 1:
+                console.log('all');
+                break;
+            case 2:
+                console.log('active');
+                break;
+            case 3:
+                console.log('completed');
+                break;
+        }
+    }
+    // 获取所有相关的元素 移除active类名 再针对点击的按钮新增类名
+    function changeBtn(target, btns) {
         for (let i = 0; i < btns.length; i++) {
             btns[i].classList.remove('active');
         }
         target.classList.add('active')
+    }
+    // 新增Todo
+    function addTodo(text) {
+        let tpl = '<li>' + text + '</li>'
+        input.appendChild(tpl)
+    }
+    window.onload = () => {
+        let input = document.querySelector('.input')
+        
+        input.addEventListener('keydown', () => {
+            if (event.keyCode === 13) {
+                addTodo(input.value)
+                //清空输入框
+            }
+        })
     }
 </script>
 <style>
@@ -97,6 +130,7 @@
         font-size: 14px;
         color: #333;
         cursor: pointer;
+        border: 1px solid transparent;
     }
 
     main .btn4 {
@@ -107,7 +141,7 @@
 
     main .active {
         border-radius: 5px;
-        border: 1px solid rgba(175, 47, 47, 0.4);
+        border-color: rgba(175, 47, 47, 0.4);
     }
 
     /* footer */
