@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Js_TodoList</title>
+    <title>Js_todoList</title>
 </head>
 
 <body>
@@ -15,8 +15,7 @@
     <main>
         <div class="warp">
             <input class="input" type="text" placeholder="接下来做什么">
-            <!-- 插入值还是？ 整个渲染？ -->
-            <li></li>
+            <ul></ul>
             <div class="footer">
                 <div class="count">0 items left</div>
                 <div class="btns">
@@ -24,7 +23,7 @@
                     <div class="btn btn2" onclick="selectBtn(2)">active</div>
                     <div class="btn btn3" onclick="selectBtn(3)">completed</div>
                 </div>
-                <div class="btn4">Clear Completed</div>
+                <div class="btn4" onclick="selectBtn(4)">Clear Completed</div>
             </div>
         </div>
     </main>
@@ -35,20 +34,70 @@
 
 </html>
 <script>
+    var type = 1
+    var index = 0
+    var todoList = []
+    // 刷新计数
+    function refresh() {
+        let count = document.querySelector('.count')
+        switch (type) {
+            case 1: //全部
+                count.innerHTML = todoList.length + ' items left'
+                break;
+            case 2: //活跃
+                count.innerHTML = todoList.filter(todo => todo.checked === false).length + ' items left'
+                break;
+            case 3: //完成
+                count.innerHTML = todoList.filter(todo => todo.checked === true).length + ' items left'
+                break;
+            case 4: //清除完成
+                count.innerHTML = todoList.length + ' items left'
+                break;
+        }
+    }
+    //TODO 待优化
+    function findIndex(e) {
+        let select_index = e.target.parentNode.attributes[0].value
+        return todoList.findIndex(todo => todo.index == select_index)
+    }
+    // Todo模板
+    function getTpl(text, index) {
+        let tpl =
+            '<li index=' + index + '>'
+            + '<div class="checkbox" onclick=solveTodo()></div>'
+            + '<div class="todo">' + text + '</div>'
+            + '<div class="close" onclick=removeTodo()>×</div>'
+            + '</li>'
+        return tpl
+    }
     // 点击按钮事件
-    function selectBtn(type) {
+    function selectBtn(btn) {
+        type = btn
+        let todos;
         let target = event.target
         let btns = document.querySelectorAll('.btn')
         changeBtn(target, btns)
         switch (type) {
             case 1:
-                console.log('all');
+                todos = todoList.length
+                refresh()
                 break;
             case 2:
-                console.log('active');
+                todos = todoList.filter(todo => todo.checked === false).length
+                refresh()
                 break;
             case 3:
-                console.log('completed');
+                todos = todoList.filter(todo => todo.checked === true).length
+                refresh()
+                break;
+            case 4:
+                let ul = document.querySelector('ul')
+                ul.innerHTML = ''
+                todoList = todoList.filter(todo => todo.checked === false)
+                todoList.forEach(todo => {
+                    ul.innerHTML = ul.innerHTML + getTpl(todo.text, todo.index)
+                })
+                refresh()
                 break;
         }
     }
@@ -61,22 +110,53 @@
     }
     // 新增Todo
     function addTodo(text) {
-        let tpl = '<li>' + text + '</li>'
-        input.appendChild(tpl)
+        let ul = document.querySelector('ul')
+        let todo = { text: text, checked: false, index: index }
+        ul.innerHTML = ul.innerHTML + getTpl(text, index)
+        todoList.push(todo)
+        index++
+        refresh()
+    }
+    // 改变Todo状态
+    function solveTodo() {
+        let target = event.target
+        let checked = !target.parentNode.classList.contains('selected')
+        let index = findIndex(event)
+        if (checked) {
+            target.parentNode.classList.add('selected')
+        } else {
+            target.parentNode.classList.remove('selected')
+        }
+        todoList[index].checked = checked
+        refresh()
+    }
+    // 移除Todo
+    function removeTodo() {
+        let count = document.querySelector('.count')
+        let index = findIndex(event)
+        event.target.parentNode.remove()
+        todoList.splice(index, 1)
+        count.innerHTML = todoList.length + ' items left'
+        refresh()
     }
     window.onload = () => {
         let input = document.querySelector('.input')
-        
+
         input.addEventListener('keydown', () => {
-            if (event.keyCode === 13) {
+            if (event.keyCode === 13 && input.value) {
                 addTodo(input.value)
-                //清空输入框
+                input.value = ''
             }
         })
     }
 </script>
 <style>
     /* 全局 */
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
     body {
         width: 600px;
         height: 100%;
@@ -97,7 +177,7 @@
         box-shadow: 0 0 5px #666;
     }
 
-    main input {
+    main .input {
         width: calc(100% - 52px);
         border: none;
         font-size: 24px;
@@ -105,6 +185,47 @@
         padding: 16px 16px 16px 36px;
         box-shadow: inset 0 -2px 1px rgb(0 0 0 / 3%);
         background-color: #fff;
+    }
+
+    main li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 16px 16px 36px;
+        box-shadow: inset 0 -2px 1px rgb(0 0 0 / 3%);
+    }
+
+    main li:hover .close {
+        display: block;
+    }
+
+    main .checkbox {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #666;
+        border-radius: 50%;
+    }
+
+    main .selected .todo {
+        text-decoration: line-through;
+        opacity: 0.3;
+    }
+    main .selected .checkbox {
+        background-color: pink;
+    }
+
+    main .todo {
+        height: 30px;
+        line-height: 30px;
+        flex: 1;
+        margin-left: 10px;
+    }
+
+    main .close {
+        display: none;
+        font-size: 23px;
+        margin-right: 10px;
+        cursor: pointer;
     }
 
     main .footer {
