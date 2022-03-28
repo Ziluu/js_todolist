@@ -36,22 +36,43 @@
 <script>
     var type = 1
     var index = 0
-    var todoList = []
-    // 刷新计数
-    function refresh() {
+    var todoList = []   //所有的数据
+    // 渲染方法
+    function render(btn) {
+        if (!btn) {
+            btn = type
+        }
+        let ul = document.querySelector('ul')
         let count = document.querySelector('.count')
-        switch (type) {
+        let todos = []  //要渲染的数据
+
+        //渲染列表方法
+        const renderList = (ul, count, btn) => {
+            type = btn
+            ul.innerHTML = ''
+            todos.forEach(todo => {
+                ul.innerHTML = ul.innerHTML + getTpl(todo.text, todo.index, todo.checked)
+            })
+            count.innerHTML = todos.length + ' items left'
+        }
+
+        switch (btn) {
             case 1: //全部
-                count.innerHTML = todoList.length + ' items left'
+                todos = todoList
+                renderList(ul, count, btn)
                 break;
             case 2: //活跃
-                count.innerHTML = todoList.filter(todo => todo.checked === false).length + ' items left'
+                todos = todoList.filter(todo => todo.checked === false)
+                renderList(ul, count, btn)
                 break;
             case 3: //完成
-                count.innerHTML = todoList.filter(todo => todo.checked === true).length + ' items left'
+                todos = todoList.filter(todo => todo.checked === true)
+                renderList(ul, count, btn)
                 break;
             case 4: //清除完成
-                count.innerHTML = todoList.length + ' items left'
+                todoList = todoList.filter(todo => todo.checked === false)
+                todos = todoList
+                render(type)
                 break;
         }
     }
@@ -61,9 +82,9 @@
         return todoList.findIndex(todo => todo.index == select_index)
     }
     // Todo模板
-    function getTpl(text, index) {
+    function getTpl(text, index, state = false) {
         let tpl =
-            '<li index=' + index + '>'
+            `<li index=${index } ${state ? "class='selected'" : ''}>`
             + '<div class="checkbox" onclick=solveTodo()></div>'
             + '<div class="todo">' + text + '</div>'
             + '<div class="close" onclick=removeTodo()>×</div>'
@@ -72,37 +93,12 @@
     }
     // 点击按钮事件
     function selectBtn(btn) {
-        type = btn
-        let todos;
-        let target = event.target
-        let btns = document.querySelectorAll('.btn')
-        changeBtn(target, btns)
-        switch (type) {
-            case 1:
-                todos = todoList.length
-                refresh()
-                break;
-            case 2:
-                todos = todoList.filter(todo => todo.checked === false).length
-                refresh()
-                break;
-            case 3:
-                todos = todoList.filter(todo => todo.checked === true).length
-                refresh()
-                break;
-            case 4:
-                let ul = document.querySelector('ul')
-                ul.innerHTML = ''
-                todoList = todoList.filter(todo => todo.checked === false)
-                todoList.forEach(todo => {
-                    ul.innerHTML = ul.innerHTML + getTpl(todo.text, todo.index)
-                })
-                refresh()
-                break;
-        }
+        btn !== 4 && changeBtn(event.target)
+        render(btn)
     }
     // 获取所有相关的元素 移除active类名 再针对点击的按钮新增类名
-    function changeBtn(target, btns) {
+    function changeBtn(target) {
+        let btns = document.querySelectorAll('.btn')
         for (let i = 0; i < btns.length; i++) {
             btns[i].classList.remove('active');
         }
@@ -115,20 +111,13 @@
         ul.innerHTML = ul.innerHTML + getTpl(text, index)
         todoList.push(todo)
         index++
-        refresh()
+        render()
     }
     // 改变Todo状态
     function solveTodo() {
-        let target = event.target
-        let checked = !target.parentNode.classList.contains('selected')
         let index = findIndex(event)
-        if (checked) {
-            target.parentNode.classList.add('selected')
-        } else {
-            target.parentNode.classList.remove('selected')
-        }
-        todoList[index].checked = checked
-        refresh()
+        todoList[index].checked = !todoList[index].checked
+        render()
     }
     // 移除Todo
     function removeTodo() {
@@ -137,7 +126,7 @@
         event.target.parentNode.remove()
         todoList.splice(index, 1)
         count.innerHTML = todoList.length + ' items left'
-        refresh()
+        render()
     }
     window.onload = () => {
         let input = document.querySelector('.input')
@@ -210,6 +199,7 @@
         text-decoration: line-through;
         opacity: 0.3;
     }
+
     main .selected .checkbox {
         background-color: pink;
     }
